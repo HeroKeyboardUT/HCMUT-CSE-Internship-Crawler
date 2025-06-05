@@ -21,6 +21,30 @@ This project provides a backend service that crawls the HCMUT internship portal 
 - React.js, TailwindCSS for frontend
 - Puppeteer for web scraping
 
+## Simple usage for just crawling data
+If you just want to crawl data and store into json file, you can simply copy the code that is currently commented in backend/src/index.js and put into  
+your javascript file in your own npm project init, remember to install these dependencies:
+   ```
+   "dependencies": {
+       "cors": "^2.8.5",
+       "express": "^4.18.2",
+       "puppeteer": "^21.0.0"
+   }
+   ```
+
+1. Create a folder and use
+   ```
+   npm init -y
+   ```
+2. Install dependencies
+   ```
+   npm install cors express puppeteer
+   ```
+3. create a javascript file and copy the commented code in backend/src/index.js
+4. run the project (npm run dev or npm start ) as your config
+
+
+
 ## Installation
 
 1. Clone the repository:
