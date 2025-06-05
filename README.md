@@ -18,6 +18,7 @@ This project provides a backend service that crawls the HCMUT internship portal 
 
 - Node.js
 - Express.js
+- React.js, TailwindCSS for frontend
 - Puppeteer for web scraping
 
 ## Installation
@@ -25,8 +26,7 @@ This project provides a backend service that crawls the HCMUT internship portal 
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/hcmut-internship-crawler.git
-   cd hcmut-internship-crawler
+   https://github.com/HeroKeyboardUT/HCMUT-CSE-Internship-Crawler.git
    ```
 
 2. Install dependencies:
