@@ -21,7 +21,7 @@ This project provides a backend service that crawls the HCMUT internship portal 
 - React.js, TailwindCSS for frontend
 - Puppeteer for web scraping
 
-## Simple usage for just crawling data move to ( Installation section if you also want to use the frontend for displaying )
+## Simple usage for just crawling data ( move to Installation section if you also want to use the frontend for displaying )
 If you just want to crawl data and store into json file, you can simply copy the code that is currently commented in backend/src/index.js and put into your javascript file in your own npm project init, remember to install these dependencies:
    ```
    "dependencies": {
