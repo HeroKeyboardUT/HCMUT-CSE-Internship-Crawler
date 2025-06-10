@@ -27,6 +27,8 @@ app.listen(PORT, () => {
 // Crawler
 Scheduler.startCrawlerSchedule();
 
+// for simple crawler, copy this code
+
 // import express from "express";
 // import fs from "fs";
 // import puppeteer from "puppeteer";

@@ -10,7 +10,20 @@ const CompanyCard = ({ company }) => {
   const navigate = useNavigate();
 
   const handleViewDetails = () => {
-    navigate(`/company/${company.id}`, { state: { company } });
+    // Save current scroll position before navigation
+    sessionStorage.setItem("scrollPosition", window.pageYOffset);
+    sessionStorage.setItem("returningFromDetails", "true");
+
+    // Navigate to company details
+    navigate(`/company/${company.id}`, {
+      state: {
+        company,
+        fromMainPage: true,
+      },
+    });
+
+    // Scroll to top
+    window.scrollTo(0, 0);
   };
 
   const isAvailable = hasAvailableSlots(company);

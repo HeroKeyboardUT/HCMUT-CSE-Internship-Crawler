@@ -4,10 +4,24 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 
 const CompanyDetail = () => {
-  //   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const company = location.state?.company;
+  const returnToPosition = location.state?.returnToPosition;
+
+  const handleBackToList = () => {
+    navigate("/");
+
+    // If we should restore position, do it after navigation
+    if (returnToPosition) {
+      setTimeout(() => {
+        const savedPosition = sessionStorage.getItem("scrollPosition");
+        if (savedPosition) {
+          window.scrollTo(0, parseInt(savedPosition));
+        }
+      }, 100);
+    }
+  };
 
   if (!company) {
     return (
@@ -35,7 +49,7 @@ const CompanyDetail = () => {
 
       <main className="flex-grow container mx-auto px-4 py-8">
         <button
-          onClick={() => navigate("/")}
+          onClick={handleBackToList}
           className="flex items-center text-blue-400 hover:text-blue-300 mb-6"
         >
           <svg

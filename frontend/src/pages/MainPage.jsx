@@ -6,6 +6,7 @@ import Pagination from "../components/Pagination";
 import StatsSummary from "../components/StatsSummary";
 import FilterPanel from "../components/FilterPanel";
 import { fetchCompanies } from "../services/apiService";
+import { useSortContext } from "../contexts/SortContext";
 import {
   extractRegion,
   hasAvailableSlots,
@@ -22,14 +23,6 @@ const MainPage = () => {
   // UI state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showAllCompanies, setShowAllCompanies] = useState(false);
-  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-
-  // Search and pagination
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   // Stats and grouping
   const [companyStats, setCompanyStats] = useState({
@@ -42,15 +35,26 @@ const MainPage = () => {
     fillPercentage: 0,
   });
   const [regionGroups, setRegionGroups] = useState({});
+  const [totalPages, setTotalPages] = useState(1);
 
-  // Sorting and filtering
-  const [sortBy, setSortBy] = useState("index");
-  const [filters, setFilters] = useState({
-    region: "all",
-    availability: "all",
-    minMaxStudents: "",
-    maxMaxStudents: "",
-  });
+  // Get all state from context
+  const {
+    sortOption,
+    searchTerm,
+    filterRegion,
+    filterAvailability,
+    minMaxStudents,
+    maxMaxStudents,
+    currentPage,
+    showAllCompanies,
+    updateSearchTerm,
+    updateSortOption,
+    updateCurrentPage,
+    toggleShowAllCompanies,
+  } = useSortContext();
+
+  // Debounced search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
 
   const ITEMS_PER_PAGE = 9; // Number of companies per page
 
@@ -58,13 +62,28 @@ const MainPage = () => {
   useEffect(() => {
     const timerId = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-      setCurrentPage(1); // Reset to first page when search changes
     }, 500);
 
     return () => {
       clearTimeout(timerId);
     };
   }, [searchTerm]);
+
+  // Restore scroll position when returning from details page
+  useEffect(() => {
+    const returningFromDetails = sessionStorage.getItem("returningFromDetails");
+
+    if (returningFromDetails === "true") {
+      const savedPosition = sessionStorage.getItem("scrollPosition");
+      if (savedPosition) {
+        setTimeout(() => {
+          window.scrollTo(0, parseInt(savedPosition));
+          // Clear the flag after restoring position
+          sessionStorage.removeItem("returningFromDetails");
+        }, 100);
+      }
+    }
+  }, []);
 
   // Fetch all companies
   useEffect(() => {
@@ -102,38 +121,36 @@ const MainPage = () => {
       });
 
       // Apply region filter
-      if (filters.region !== "all") {
+      if (filterRegion !== "all") {
         filtered = filtered.filter(
-          (company) => extractRegion(company.address) === filters.region
+          (company) => extractRegion(company.address) === filterRegion
         );
       }
 
       // Apply availability filter
-      if (filters.availability !== "all") {
+      if (filterAvailability !== "all") {
         filtered = filtered.filter((company) => {
           const available = hasAvailableSlots(company);
-          return filters.availability === "available" ? available : !available;
+          return filterAvailability === "available" ? available : !available;
         });
       }
 
       // Apply min/max students filter
-      if (filters.minMaxStudents !== "") {
+      if (minMaxStudents !== "") {
         filtered = filtered.filter(
-          (company) =>
-            company.maxAcceptedStudent >= Number(filters.minMaxStudents)
+          (company) => company.maxAcceptedStudent >= Number(minMaxStudents)
         );
       }
 
-      if (filters.maxMaxStudents !== "") {
+      if (maxMaxStudents !== "") {
         filtered = filtered.filter(
-          (company) =>
-            company.maxAcceptedStudent <= Number(filters.maxMaxStudents)
+          (company) => company.maxAcceptedStudent <= Number(maxMaxStudents)
         );
       }
 
       // Sort companies
       const sorted = [...filtered].sort((a, b) => {
-        switch (sortBy) {
+        switch (sortOption) {
           case "name":
             return a.shortname?.localeCompare(b.shortname);
           case "maxStudents":
@@ -175,43 +192,14 @@ const MainPage = () => {
   }, [
     allCompanies,
     debouncedSearchTerm,
-    sortBy,
+    sortOption,
     currentPage,
     showAllCompanies,
-    filters,
+    filterRegion,
+    filterAvailability,
+    minMaxStudents,
+    maxMaxStudents,
   ]);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-    window.scrollTo(0, 0);
-  };
-
-  const toggleDisplayMode = () => {
-    setShowAllCompanies(!showAllCompanies);
-    if (!showAllCompanies) {
-      // When switching to show all, scroll to top
-      window.scrollTo(0, 0);
-    }
-  };
-
-  const handleFilterChange = (filterName, value) => {
-    if (filterName === "reset") {
-      setFilters({
-        region: "all",
-        availability: "all",
-        minMaxStudents: "",
-        maxMaxStudents: "",
-      });
-    } else {
-      setFilters((prev) => ({
-        ...prev,
-        [filterName]: value,
-      }));
-    }
-
-    // Reset to first page when filters change
-    setCurrentPage(1);
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-900">
@@ -257,15 +245,15 @@ const MainPage = () => {
               className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
               placeholder="Search companies..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => updateSearchTerm(e.target.value)}
             />
           </div>
 
           <div className="flex space-x-4">
             <select
               className="bg-gray-800 border border-gray-700 text-white text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5"
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              value={sortOption}
+              onChange={(e) => updateSortOption(e.target.value)}
             >
               <option value="index">Sort by Default</option>
               <option value="name">Sort by Name</option>
@@ -277,7 +265,7 @@ const MainPage = () => {
             </select>
 
             <button
-              onClick={toggleDisplayMode}
+              onClick={toggleShowAllCompanies}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
             >
               {showAllCompanies ? "Show Paginated" : "Show All Companies"}
@@ -286,15 +274,7 @@ const MainPage = () => {
         </div>
 
         {/* Advanced Filters */}
-        {!loading && !error && (
-          <FilterPanel
-            filters={filters}
-            onFilterChange={handleFilterChange}
-            regions={regionGroups}
-            onToggleFilters={() => setShowAdvancedFilters(!showAdvancedFilters)}
-            showFilters={showAdvancedFilters}
-          />
-        )}
+        {!loading && !error && <FilterPanel regions={regionGroups} />}
 
         {/* Results count */}
         {!loading && !error && (
@@ -334,7 +314,7 @@ const MainPage = () => {
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
-                onPageChange={handlePageChange}
+                onPageChange={updateCurrentPage}
               />
             )}
           </>
