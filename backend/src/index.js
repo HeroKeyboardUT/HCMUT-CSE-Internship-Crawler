@@ -2,21 +2,32 @@ import express from "express";
 import cors from "cors";
 import { crawlRouter } from "./routes/crawl.route.js";
 import Scheduler from "./utils/sched.js";
-
+import path from "path";
+import "dotenv/config";
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
+
+const __dirname = path.resolve();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
-
-// Health check route
-app.get("/", (req, res) => {
-  res.json({ message: "Backend server is running!" });
-});
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    credentials: true, // allow frontend to send cookies
+  })
+);
 
 // Routes
 app.use("/api/crawl", crawlRouter);
+
+if (process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+  });
+}
 
 // Start server
 app.listen(PORT, () => {
