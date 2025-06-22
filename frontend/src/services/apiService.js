@@ -2,7 +2,8 @@
  * Service for handling API requests
  */
 
-const BASE_URL = "http://localhost:3000/api";
+const BASE_URL = import.meta.env.VITE_API_URL;
+// const BASE_URL = "http://localhost:3000/api";
 
 /**
  * Fetch companies from the API
@@ -10,7 +11,7 @@ const BASE_URL = "http://localhost:3000/api";
  */
 export const fetchCompanies = async () => {
   try {
-    const response = await fetch(`${BASE_URL}/crawl/hcmut`);
+    const response = await fetch(`${BASE_URL}/api/crawl/hcmut`);
 
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
