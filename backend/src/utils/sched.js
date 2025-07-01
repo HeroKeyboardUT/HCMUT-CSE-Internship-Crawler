@@ -23,9 +23,9 @@ class Scheduler {
   async startCrawlerSchedule() {
     this.runAllCrawlers();
 
-    // Thiết lập lịch trình chạy mỗi 10 phút
-    const TEN_MINUTES = 60 * 60 * 1000;
-    this.intervalId = setInterval(() => this.runAllCrawlers(), TEN_MINUTES);
+    // Thiết lập lịch trình chạy mỗi 12 giờ
+    const TIME = 60 * 60 * 1000 * 12;
+    this.intervalId = setInterval(() => this.runAllCrawlers(), TIME);
     this.isRunning = true;
 
     console.log("🕒 Crawler schedule started - running every 10 minutes");
