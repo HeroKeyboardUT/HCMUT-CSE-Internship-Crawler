@@ -24,7 +24,7 @@ class Scheduler {
     this.runAllCrawlers();
 
     // Thiết lập lịch trình chạy mỗi 10 phút
-    const TEN_MINUTES = 60 * 10 * 1000;
+    const TEN_MINUTES = 60 * 60 * 1000;
     this.intervalId = setInterval(() => this.runAllCrawlers(), TEN_MINUTES);
     this.isRunning = true;
 
