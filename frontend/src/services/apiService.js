@@ -3,7 +3,7 @@
  */
 
 const BASE_URL =
-  import.meta.env.MODE === "production" ? "http://localhost:5001/api" : "/api";
+  import.meta.env.MODE === "production" ? "/api" : "localhost:5001/api";
 // const BASE_URL = "http://localhost:5001/api";
 
 /**
