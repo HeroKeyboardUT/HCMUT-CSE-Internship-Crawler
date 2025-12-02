@@ -8,7 +8,11 @@ class Scheduler {
     console.log("🔄 Running scheduled crawlers...");
 
     // Gọi các hàm crawler đã đăng ký
-    crawler.hcmut_crawler();
+    try {
+      await crawler.hcmut_crawler();
+    } catch (error) {
+      console.error("Error in hcmut_crawler:", error);
+    }
 
     // Thêm các crawler khác nếu cần
     // crawler.future_crawler();
