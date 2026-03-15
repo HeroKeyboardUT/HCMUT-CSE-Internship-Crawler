@@ -23,6 +23,7 @@ const MainPage = () => {
   // UI state
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState(0);
 
   // Stats and grouping
   const [companyStats, setCompanyStats] = useState({
@@ -90,11 +91,12 @@ const MainPage = () => {
     const getCompanies = async () => {
       setLoading(true);
       try {
-        const data = await fetchCompanies();
-        setAllCompanies(data);
+        const { companies, lastCrawledAt } = await fetchCompanies();
+        setAllCompanies(companies);
+        setLastUpdatedAt(lastCrawledAt);
 
         // Calculate stats and group by region
-        const groups = groupByRegion(data);
+        const groups = groupByRegion(companies);
         setRegionGroups(groups);
 
         setLoading(false);
@@ -123,7 +125,7 @@ const MainPage = () => {
       // Apply region filter
       if (filterRegion !== "all") {
         filtered = filtered.filter(
-          (company) => extractRegion(company.address) === filterRegion
+          (company) => extractRegion(company.address) === filterRegion,
         );
       }
 
@@ -138,13 +140,13 @@ const MainPage = () => {
       // Apply min/max students filter
       if (minMaxStudents !== "") {
         filtered = filtered.filter(
-          (company) => company.maxAcceptedStudent >= Number(minMaxStudents)
+          (company) => company.maxAcceptedStudent >= Number(minMaxStudents),
         );
       }
 
       if (maxMaxStudents !== "") {
         filtered = filtered.filter(
-          (company) => company.maxAcceptedStudent <= Number(maxMaxStudents)
+          (company) => company.maxAcceptedStudent <= Number(maxMaxStudents),
         );
       }
 
@@ -184,7 +186,7 @@ const MainPage = () => {
         const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
         const paginatedCompanies = sorted.slice(
           startIndex,
-          startIndex + ITEMS_PER_PAGE
+          startIndex + ITEMS_PER_PAGE,
         );
         setDisplayedCompanies(paginatedCompanies);
       }
@@ -213,6 +215,12 @@ const MainPage = () => {
           <p className="text-gray-400">
             Find and explore internship opportunities from {companyStats.total}{" "}
             companies
+          </p>
+          <p className="text-sm text-gray-500 mt-1">
+            Last data update:{" "}
+            {lastUpdatedAt
+              ? new Date(lastUpdatedAt).toLocaleString("vi-VN")
+              : "Waiting for first crawl"}
           </p>
         </div>
 

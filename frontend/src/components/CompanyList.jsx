@@ -13,8 +13,8 @@ const CompanyList = () => {
     const getCompanies = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchCompanies();
-        setCompanies(data);
+        const { companies: crawledCompanies } = await fetchCompanies();
+        setCompanies(crawledCompanies);
       } catch (error) {
         console.error("Error fetching companies:", error);
       } finally {
@@ -44,7 +44,7 @@ const CompanyList = () => {
         (company) =>
           company.fullname?.toLowerCase().includes(term) ||
           company.shortname?.toLowerCase().includes(term) ||
-          company.address?.toLowerCase().includes(term)
+          company.address?.toLowerCase().includes(term),
       );
     }
 
