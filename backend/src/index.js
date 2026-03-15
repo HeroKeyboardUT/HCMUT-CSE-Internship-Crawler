@@ -8,12 +8,23 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 
 const __dirname = path.resolve();
-const CRAWL_TIMEOUT_MS = 15000;
+const readPositiveIntEnv = (name, fallback) => {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : fallback;
+};
+
+const CRAWL_TIMEOUT_MS = readPositiveIntEnv("CRAWL_TIMEOUT_MS", 45000);
+const CRAWL_RETRY_COUNT = readPositiveIntEnv("CRAWL_RETRY_COUNT", 3);
+const CRAWL_RETRY_DELAY_MS = readPositiveIntEnv("CRAWL_RETRY_DELAY_MS", 3000);
+const CRAWL_TARGET_URL =
+  process.env.CRAWL_TARGET_URL || "https://internship.cse.hcmut.edu.vn/";
 const CRAWL_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 let cachedCompanies = [];
 let lastCrawledAt = 0;
 let crawlingPromise = null;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const normalizeCompanyData = (item, index) => ({
   index,
@@ -34,14 +45,25 @@ const normalizeCompanyData = (item, index) => ({
   })),
 });
 
-const crawlHcmutCompanies = async () => {
+const crawlHcmutCompaniesOnce = async () => {
   let browser;
 
   try {
-    browser = await chromium.launch({ headless: true });
-    const page = await browser.newPage();
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+      ],
+    });
+    const context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    });
+    const page = await context.newPage();
 
-    await page.goto("https://internship.cse.hcmut.edu.vn/", {
+    await page.goto(CRAWL_TARGET_URL, {
       waitUntil: "domcontentloaded",
       timeout: CRAWL_TIMEOUT_MS,
     });
@@ -101,6 +123,27 @@ const crawlHcmutCompanies = async () => {
       await browser.close();
     }
   }
+};
+
+const crawlHcmutCompanies = async () => {
+  let lastError;
+
+  for (let attempt = 1; attempt <= CRAWL_RETRY_COUNT; attempt += 1) {
+    try {
+      return await crawlHcmutCompaniesOnce();
+    } catch (error) {
+      lastError = error;
+      console.error(
+        `Crawl attempt ${attempt}/${CRAWL_RETRY_COUNT} failed: ${error.message}`,
+      );
+
+      if (attempt < CRAWL_RETRY_COUNT) {
+        await sleep(CRAWL_RETRY_DELAY_MS * attempt);
+      }
+    }
+  }
+
+  throw lastError;
 };
 
 const getHcmutCompanies = async (forceRefresh = false) => {
@@ -191,6 +234,9 @@ app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
   console.log(`📡 Crawl API: http://localhost:${PORT}/api/crawl/hcmut`);
   console.log("⏱️ Auto crawl schedule: every 1 hour");
+  console.log(
+    `⚙️ Crawl config: timeout=${CRAWL_TIMEOUT_MS}ms retries=${CRAWL_RETRY_COUNT} retryDelay=${CRAWL_RETRY_DELAY_MS}ms`,
+  );
 
   startCrawlSchedule();
 });
