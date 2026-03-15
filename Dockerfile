@@ -11,7 +11,7 @@ COPY package*.json ./
 COPY backend/package*.json ./backend/
 COPY frontend/package*.json ./frontend/
 
-RUN npm install --prefix backend && npm install --prefix frontend
+RUN npm install --prefix backend && npm install --prefix frontend --include=dev
 
 COPY . .
 
