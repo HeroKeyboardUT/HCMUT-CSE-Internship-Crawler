@@ -63,6 +63,21 @@ If you just want to crawl data and store into json file, you can simply copy the
    npm run start
    ```
 
+## Deploy To Railway (Playwright Fix)
+
+If your local crawl works but Railway fails with errors like `libglib-2.0.so.0: cannot open shared object file`, the runtime image is missing Linux libraries required by Chromium.
+
+This repository now includes a root `Dockerfile` based on Playwright's official image, which already contains the required browser dependencies.
+
+### Steps
+
+1. Push your latest code (including `Dockerfile`) to your Git repository.
+2. In Railway, create/redeploy the service from that repository.
+3. Ensure Railway uses Docker build (it will auto-detect the `Dockerfile`).
+4. Set environment variables as needed (for example `PORT` if you want to override default).
+
+After redeploy, Playwright Chromium should launch successfully in Railway.
+
 ## Project Structure
 
 ```
